@@ -11,6 +11,7 @@ type Book struct {
 	Num int
 	Author string
 	PublishDate int64
+	BorrowCount int
 	lock sync.Mutex
 }
 
@@ -36,6 +37,7 @@ func (b *Book) Borrow() (err error){
 	}
 
 	b.Num = b.Num - 1
+	b.BorrowCount = b.BorrowCount + 1
 	return
 }
 

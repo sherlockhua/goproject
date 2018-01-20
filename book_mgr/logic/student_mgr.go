@@ -3,6 +3,8 @@ package logic
 import (
 	"fmt"
 	"sync"
+	"encoding/json"
+	"io/ioutil"
 )
 
 type StudentMgr struct {
@@ -12,9 +14,26 @@ type StudentMgr struct {
 }
 
 func NewStudnetMgr() (*StudentMgr) {
-	return &StudentMgr{
+	s :=  &StudentMgr{
 		StudentMap:make(map[int]*Student, 16),
 	}
+	s.load()
+	return s
+}
+
+
+func (s *StudentMgr) load() {
+	data, err := ioutil.ReadFile(StudentMgrSavePath)
+	if err != nil {
+		fmt.Printf("load failed, err:%v\n", err)
+		return
+	}
+
+	err = json.Unmarshal(data, s)
+	if err != nil {
+		fmt.Printf("unmarshal failed, err:%v\n", err)
+	}
+	fmt.Printf("load data from disk succ")
 }
 
 func (s *StudentMgr) AddStudent(stu *Student) {
@@ -22,6 +41,22 @@ func (s *StudentMgr) AddStudent(stu *Student) {
 	defer s.lock.Unlock()
 
 	s.StudentMap[stu.Id] = stu
+	s.Save()
+}
+
+
+func (s *StudentMgr) Save() {
+	data, err := json.Marshal(s)
+	if err != nil {
+		fmt.Printf("save failed, err:%v\n", err)
+		return
+	}
+
+	err = ioutil.WriteFile(StudentMgrSavePath, data, 0666)
+	if err != nil {
+		fmt.Printf("write file failed, err:%v\n", err)
+		return
+	}
 }
 
 func (s *StudentMgr)GetStudentById (id int) (stu *Student, err error) {

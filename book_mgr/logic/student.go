@@ -32,6 +32,7 @@ func (s *Student) AddBook(b *Book) {
 	s.lock.Lock()
 	defer s.lock.Unlock()
 	s.BookMap[b.BookId] = b
+	
 	return
 }
 

@@ -1,10 +1,13 @@
 package main
 
 import (
+	"time"
+	"fmt"
 	"net/http"
 	"strconv"
 	"encoding/json"
-	"code.oldboy.com/day5/book_mgr/logic"
+	"github.com/sherlockhua/goproject/book_mgr/logic"
+	"log"
 )
 
 
@@ -176,6 +179,7 @@ func  bookBorrow(w http.ResponseWriter, r *http.Request) {
 		responseError(w, ErrInvalidParameter)
 		return
 	}
+	studentMgr.Save()
 	responseSuccess(w, ErrSuccess, nil)
 }
 
@@ -196,17 +200,38 @@ func  studentBookList(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
+	
 	responseSuccess(w, ErrSuccess, bookList)
 }
 
 
-func main(){
-	http.HandleFunc("/book/add", addBook)
-	http.HandleFunc("/book/searchName", searchBookName)
-	http.HandleFunc("/book/searchAuthor", searchAuthor)
+func  getTop10(w http.ResponseWriter, r *http.Request) {
+	bookList := bookMgr.GetTop10()
+	responseSuccess(w, ErrSuccess,  bookList)
+}
 
-	http.HandleFunc("/student/add", addStudent)
-	http.HandleFunc("/student/booklist", studentBookList)
-	http.HandleFunc("/book/borrow", bookBorrow)
-	http.ListenAndServe(":8080", nil)
+func LogHandle(handle func(w http.ResponseWriter, r *http.Request)) func(w http.ResponseWriter, r *http.Request) {
+
+	return  func(w http.ResponseWriter, r *http.Request) {
+		start := time.Now().UnixNano()
+		handle(w, r)
+		end := time.Now().UnixNano()
+		cost := (end - start)/1000
+		log.Printf("url:%s cost:%d us agent:%s\n", r.RequestURI, cost, r.UserAgent())
+	}
+}
+
+func main(){
+	http.HandleFunc("/book/add", LogHandle(addBook))
+	http.HandleFunc("/book/searchName", LogHandle(searchBookName))
+	http.HandleFunc("/book/searchAuthor", LogHandle(searchAuthor))
+
+	http.HandleFunc("/student/add", LogHandle(addStudent))
+	http.HandleFunc("/student/booklist", LogHandle(studentBookList))
+	http.HandleFunc("/book/borrow", LogHandle(bookBorrow))
+	http.HandleFunc("/book/top10", LogHandle(getTop10))
+	err := http.ListenAndServe(":8080", nil)
+	if err != nil {
+		fmt.Println("start server failed, err:", err)
+	}
 }
