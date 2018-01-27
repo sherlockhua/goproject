@@ -4,6 +4,7 @@ import (
 	"net"
 	"encoding/binary"
 	"fmt"
+	"io"
 )
 
 
@@ -68,6 +69,14 @@ func ReadPacket(conn net.Conn) (body []byte, cmd int32, err error) {
 	}
 
 	var buf []byte = make([]byte, length)
+	_, err = io.ReadFull(conn, buf)
+	if err != nil {
+		fmt.Printf("read body from conn %v failed, err:%v\n", conn, err)
+		return 
+	}
+	body = buf
+	return
+	/*
 	var curReadBytes int32 = 0
 	for {
 		n, errRet := conn.Read(buf)
@@ -82,10 +91,10 @@ func ReadPacket(conn net.Conn) (body []byte, cmd int32, err error) {
 		if (curReadBytes == length) {
 			break
 		}
-		
+
 		buf = make([]byte, length - curReadBytes)
 	}
-	return
+	return*/
 }
 
 //前四个字节：length
