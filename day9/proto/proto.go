@@ -47,8 +47,18 @@ type MessageRequest struct {
 	Username string `json:"username"`
 }
 
+type BroadMessage struct {
+	Message string `json:"message"`
+	Username string `json:"username"`
+}
+
 type MessageResponse struct {
 	ResponseBase
+}
+
+type Packet struct {
+	Cmd int32
+	Body []byte
 }
 
 //前四个字节：length
@@ -62,12 +72,14 @@ func ReadPacket(conn net.Conn) (body []byte, cmd int32, err error) {
 		return
 	}
 
+	fmt.Printf("read length succ:%d\n", length)
 	err = binary.Read(conn, binary.BigEndian, &cmd)
 	if err != nil {
 		fmt.Printf("read from conn:%v failed, err:%v\n", conn, err)
 		return
 	}
 
+	fmt.Printf("read cmd succ:%d\n", cmd)
 	var buf []byte = make([]byte, length)
 	_, err = io.ReadFull(conn, buf)
 	if err != nil {
@@ -75,6 +87,7 @@ func ReadPacket(conn net.Conn) (body []byte, cmd int32, err error) {
 		return 
 	}
 	body = buf
+	fmt.Printf("read body succ:%v\n", string(buf))
 	return
 	/*
 	var curReadBytes int32 = 0
@@ -114,12 +127,14 @@ func WritePacket(conn net.Conn, cmdno int32, body []byte) (err error) {
 		return
 	}
 	
+	fmt.Printf("write length succ:%d\n", length)
 	err = binary.Write(conn, binary.BigEndian, cmdno)
 	if err != nil {
 		fmt.Printf("write cmd no failed, err:%v\n", err)
 		return
 	}
 
+	fmt.Printf("write cmdno succ:%d\n", cmdno)
 	var n int
 	var sendBytes int
 	msgLen := len(body)
@@ -135,5 +150,8 @@ func WritePacket(conn net.Conn, cmdno int32, body []byte) (err error) {
 		}
 		body = body[sendBytes:]
 	}
+
+	
+	fmt.Printf("write body succ:%v\n", string(body))
 	return
 }

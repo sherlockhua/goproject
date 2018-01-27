@@ -7,6 +7,7 @@ import (
 	"net"
 	"time"
 	"sync"
+	"github.com/sherlockhua/goproject/day9/proto"
 )
 
 
@@ -15,7 +16,7 @@ type ClientMgr struct {
 	clientsMap map[net.Conn]int
 	maxClientNums int
 	//msgChan用来保存客户端发送过来的消息
-	msgChan chan []byte
+	msgChan chan *proto.Packet
 	newClientChan chan net.Conn
 	closeChan chan net.Conn
 	lock sync.RWMutex
@@ -25,7 +26,7 @@ func NewClientMgr(maxClients int) *ClientMgr {
 	mgr :=  &ClientMgr {
 		clientsMap:make(map[net.Conn]int, 1024),
 		maxClientNums: maxClients,
-		msgChan: make(chan []byte, 1000),
+		msgChan: make(chan *proto.Packet, 1000),
 		newClientChan: make(chan net.Conn, 1000),
 		closeChan: make(chan net.Conn, 1000),
 	}
@@ -59,7 +60,7 @@ func (c *ClientMgr) run() {
 }
 
 //广播消息
-func (c *ClientMgr)transfer(msg []byte) {
+func (c *ClientMgr)transfer(msg *proto.Packet) {
 
 	c.lock.RLock()
 	defer c.lock.RUnlock()
@@ -73,7 +74,9 @@ func (c *ClientMgr)transfer(msg []byte) {
 }
 
 //发送消息给指定客户端
-func (c *ClientMgr) sendToClient(client net.Conn, msg []byte) (err error) {
+func (c *ClientMgr) sendToClient(client net.Conn, msg *proto.Packet) (err error) {
+	return proto.WritePacket(client, msg.Cmd, msg.Body)
+	/*
 	var n int
 	var sendBytes int
 	msgLen := len(msg)
@@ -92,9 +95,10 @@ func (c *ClientMgr) sendToClient(client net.Conn, msg []byte) (err error) {
 		msg = msg[sendBytes:]
 	}
 	return
+	*/
 }
 
-func (c *ClientMgr) addMsg(msg []byte) (err error) {
+func (c *ClientMgr) addMsg(msg *proto.Packet) (err error) {
 
 	ticker := time.NewTicker(time.Millisecond*10)
 	defer ticker.Stop()
