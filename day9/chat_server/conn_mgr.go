@@ -16,7 +16,8 @@ type ClientMgr struct {
 	maxClientNums int
 	//msgChan用来保存客户端发送过来的消息
 	msgChan chan []byte
-	clientChan chan net.Conn
+	newClientChan chan net.Conn
+	closeChan chan net.Conn
 	lock sync.RWMutex
 }
 
@@ -25,7 +26,8 @@ func NewClientMgr(maxClients int) *ClientMgr {
 		clientsMap:make(map[net.Conn]int, 1024),
 		maxClientNums: maxClients,
 		msgChan: make(chan []byte, 1000),
-		clientChan: make(chan net.Conn, 1000),
+		newClientChan: make(chan net.Conn, 1000),
+		closeChan: make(chan net.Conn, 1000),
 	}
 
 	go mgr.run()
@@ -35,10 +37,17 @@ func NewClientMgr(maxClients int) *ClientMgr {
 
 //遍历所有客户端发送过来的消息，并广播到所有的其他客户端
 func (c *ClientMgr) procConn() {
-	for conn := range c.clientChan {
-		c.lock.Lock()
-		c.clientsMap[conn] = 0
-		c.lock.Unlock()
+	for {
+		select {
+		case conn := <- c.newClientChan:
+			c.lock.Lock()
+			c.clientsMap[conn] = 0
+			c.lock.Unlock()
+		case conn := <- c.closeChan:
+			c.lock.Lock()
+			delete(c.clientsMap, conn)
+			c.lock.Unlock()
+		}
 	}
 }
 

@@ -15,11 +15,28 @@ func runServer(l net.Listener) (err error) {
 			continue
 		}
 
-		clientMgr.clientChan <- conn
+		clientMgr.newClientChan <- conn
 		go process(conn)
 	}
 }
 
 func process(conn net.Conn) {
-	return
+
+	defer func() {
+		clientMgr.closeChan <- conn
+		conn.Close()
+	}()
+
+	for {
+		var buf []byte = make([]byte, 512)
+		n, err := conn.Read(buf)
+		if err != nil {
+			fmt.Printf("read from conn failed, err:%v\n", err)
+			return
+		}
+
+		buf = buf[0:n]
+		clientMgr.addMsg(buf)
+	}
+	
 }

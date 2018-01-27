@@ -23,7 +23,7 @@ func main() {
 
 	clientMgr = NewClientMgr(200)
 	fmt.Printf("start server...\n")
-	l, err := startServer("0.0.0.0:8080")
+	l, err := startServer("0.0.0.0:18080")
 	if err != nil {
 		fmt.Println("start server failed, err:", err)
 		return
