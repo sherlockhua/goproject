@@ -1,6 +1,7 @@
 package logic
 
 import (
+	"github.com/garyburd/redigo/redis"
 	"io/ioutil"
 	"sync"
 	"fmt"
@@ -42,7 +43,7 @@ func (b *BookMgr) load() {
 	if err != nil {
 		fmt.Printf("unmarshal failed, err:%v\n", err)
 	}
-	fmt.Printf("load data from disk succ")
+	fmt.Printf("load data from disk succ\n")
 }
 
 func (b *BookMgr) Len() int {
@@ -55,6 +56,72 @@ func (b *BookMgr) Less(i, j int) bool {
 
 func (b *BookMgr) Swap(i, j int) {
 	b.BookList[i], b.BookList[j] = b.BookList[j], b.BookList[i]
+}
+
+
+func (b *BookMgr) SearchByBookNameV2(bookName string) (bookList []*Book) {
+	
+	conn := pool.Get()
+	data, err := redis.Strings(conn.Do("HGETALL", bookName))
+	if err != nil {
+		fmt.Printf("hgetall failed, err:%v\n", err)
+		return
+	}
+
+	fmt.Printf("data:%v\n", data)
+	var args []interface{}
+	args = append(args, BookTableName)
+	for i := 0; i <len(data); i+=2 {
+		args = append(args, data[i])
+	}
+
+	data, err = redis.Strings(conn.Do("HMGET", args...))
+	if err != nil {
+		fmt.Printf("hgetall failed, err:%v\n", err)
+		return
+	}
+	fmt.Printf("all book data:%v\n", data)
+	for _, bookData := range data {
+		bk := &Book{}
+		err = bk.UnMarshal(bookData)
+		if err != nil {
+			fmt.Printf("UnMarshal failed, err:%v\n", err)
+			continue
+		}
+
+		bookList = append(bookList, bk)
+	}
+	
+	return
+}
+
+func (b *BookMgr) AddBookV2(book *Book) (err error) {
+	b.lock.Lock()
+	defer b.lock.Unlock()
+	conn := pool.Get()
+	if err != nil {
+		fmt.Printf("get redis conn failed, err:%v\n", err)
+		return
+	}
+	// 把当前书籍存储到redis 中的books哈希表中
+	_, err = conn.Do("HSET", BookTableName, book.BookId, book.Marshal())
+	if err != nil {
+		fmt.Printf("hset redis  failed, err:%v\n", err)
+		return
+	}
+	// 把相同作者的书籍存储到redis 中的哈希表中
+	_, err = conn.Do("HSET", book.Author, book.BookId, book.BookId)
+	if err != nil {
+		fmt.Printf("hset redis  failed, err:%v\n", err)
+		return
+	}
+	// 把相同名字的书籍存储到redis 中的哈希表中
+	_, err = conn.Do("HSET", book.Name, book.BookId, book.BookId)
+	if err != nil {
+		fmt.Printf("hset redis  failed, err:%v\n", err)
+		return
+	}
+	return
 }
 
 func (b *BookMgr) AddBook(book *Book) (err error) {
@@ -88,6 +155,7 @@ func (b *BookMgr) AddBook(book *Book) (err error) {
 	b.save()
 	return
 }
+
 
 func (b *BookMgr) SearchByBookName(bookName string) (bookList []*Book) {
 	b.lock.Lock()

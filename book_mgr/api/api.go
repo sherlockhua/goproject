@@ -19,6 +19,13 @@ var (
 func init() {
 	bookMgr = logic.NewBookMgr()
 	studentMgr = logic.NewStudnetMgr()
+	err := logic.InitRedis("127.0.0.1:6379", "")
+	if err != nil {
+		fmt.Printf("init redis failed, err:%v\n", err)
+		return
+	}
+
+	fmt.Printf("init redis succ\n")
 }
 
 func responseError(w http.ResponseWriter, code int) {
@@ -79,7 +86,8 @@ func  addBook(w http.ResponseWriter, r *http.Request) {
 
 	book := logic.NewBook(bookId, name, num, author, int64(publishDate))
 
-	err = bookMgr.AddBook(book)
+	//err = bookMgr.AddBook(book)
+	err = bookMgr.AddBookV2(book)
 	if err != nil {
 		responseError(w, ErrServerBusy)
 		return
@@ -98,7 +106,7 @@ func  searchBookName(w http.ResponseWriter, r *http.Request) {
 		responseError(w, ErrInvalidParameter)
 		return
 	}
-	bookList := bookMgr.SearchByBookName(name)
+	bookList := bookMgr.SearchByBookNameV2(name)
 	responseSuccess(w, ErrSuccess, bookList)
 }
 

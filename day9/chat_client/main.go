@@ -18,6 +18,7 @@ func main(){
 		return
 	}
 
+	fmt.Fprintf
 	recvMsg = make(chan interface{}, 1000)
 	defer conn.Close()
 	go read(conn)

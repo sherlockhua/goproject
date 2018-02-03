@@ -2,6 +2,7 @@ package logic
 
 import (
 	"errors"
+	"encoding/json"
 	"sync"
 )
 
@@ -47,4 +48,13 @@ func (b *Book) Back() (err error) {
 
 	b.Num = b.Num + 1
 	return
+}
+
+func (b *Book) Marshal() string {
+	data, _ := json.Marshal(b)
+	return string(data)
+}
+
+func (b *Book) UnMarshal(data string) error {
+	return json.Unmarshal([]byte(data), b)
 }
