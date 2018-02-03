@@ -35,6 +35,7 @@ func handleUserInfo(w http.ResponseWriter, r *http.Request) {
 	m["user_name"] = 33
 	m["age"] = 388
 
+	//执行模板渲染
 	gtemp.Execute(w, m)
 }
 

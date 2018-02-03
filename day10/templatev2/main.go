@@ -37,6 +37,7 @@ func handleUserInfo(w http.ResponseWriter, r *http.Request) {
 		persons = append(persons, p)
 	}
 
+	//执行模板渲染
 	gtemp.Execute(w, persons)
 }
 
