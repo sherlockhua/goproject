@@ -1,22 +1,23 @@
 package logic
 
 import (
+	"time"
 	"errors"
 	"encoding/json"
 	"sync"
 )
 
 type Book struct {
-	BookId string
-	Name string
-	Num int
-	Author string
-	PublishDate int64
-	BorrowCount int
+	BookId string `db:"book_id"`
+	Name string `db:"name"`
+	Num int	`db:"num"`
+	Author string  `db:"author"`
+	PublishDate time.Time	`db:"publish_time"`
+	BorrowCount int	`db:"borrow_count"`
 	lock sync.Mutex
 }
 
-func NewBook(bookId, name string, num int, author string, publishDate int64) (book *Book) {
+func NewBook(bookId, name string, num int, author string, publishDate time.Time) (book *Book) {
 	book = &Book {
 		BookId: bookId,
 		Name:name, 

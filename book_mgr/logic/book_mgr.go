@@ -1,11 +1,12 @@
 package logic
 
 import (
-	"github.com/garyburd/redigo/redis"
+	"time"
+	"database/sql"
+	_"github.com/garyburd/redigo/redis"
 	"io/ioutil"
 	"sync"
 	"fmt"
-	"sort"
 	"encoding/json"
 )
 
@@ -27,158 +28,50 @@ func NewBookMgr() (bookMgr*BookMgr) {
 		BookNameMap:make(map[string][]*Book, 16),
 		BookAuthorMap:make(map[string][]*Book, 16),
 	}
-
-	bookMgr.load()
 	return
 }
 
-func (b *BookMgr) load() {
-	data, err := ioutil.ReadFile(BookMgrSavePath)
-	if err != nil {
-		fmt.Printf("load failed, err:%v\n", err)
-		return
-	}
-
-	err = json.Unmarshal(data, b)
-	if err != nil {
-		fmt.Printf("unmarshal failed, err:%v\n", err)
-	}
-	fmt.Printf("load data from disk succ\n")
-}
-
-func (b *BookMgr) Len() int {
-	return len(b.BookList)
-}
-
-func (b *BookMgr) Less(i, j int) bool {
-	return b.BookList[i].BorrowCount > b.BookList[j].BorrowCount
-}
-
-func (b *BookMgr) Swap(i, j int) {
-	b.BookList[i], b.BookList[j] = b.BookList[j], b.BookList[i]
-}
-
-
-func (b *BookMgr) SearchByBookNameV2(bookName string) (bookList []*Book) {
-	
-	conn := pool.Get()
-	data, err := redis.Strings(conn.Do("HGETALL", bookName))
-	if err != nil {
-		fmt.Printf("hgetall failed, err:%v\n", err)
-		return
-	}
-
-	fmt.Printf("data:%v\n", data)
-	var args []interface{}
-	args = append(args, BookTableName)
-	for i := 0; i <len(data); i+=2 {
-		args = append(args, data[i])
-	}
-
-	data, err = redis.Strings(conn.Do("HMGET", args...))
-	if err != nil {
-		fmt.Printf("hgetall failed, err:%v\n", err)
-		return
-	}
-	fmt.Printf("all book data:%v\n", data)
-	for _, bookData := range data {
-		bk := &Book{}
-		err = bk.UnMarshal(bookData)
-		if err != nil {
-			fmt.Printf("UnMarshal failed, err:%v\n", err)
-			continue
-		}
-
-		bookList = append(bookList, bk)
-	}
-	
-	return
-}
-
-func (b *BookMgr) AddBookV2(book *Book) (err error) {
-	b.lock.Lock()
-	defer b.lock.Unlock()
-	conn := pool.Get()
-	if err != nil {
-		fmt.Printf("get redis conn failed, err:%v\n", err)
-		return
-	}
-	// 把当前书籍存储到redis 中的books哈希表中
-	_, err = conn.Do("HSET", BookTableName, book.BookId, book.Marshal())
-	if err != nil {
-		fmt.Printf("hset redis  failed, err:%v\n", err)
-		return
-	}
-	// 把相同作者的书籍存储到redis 中的哈希表中
-	_, err = conn.Do("HSET", book.Author, book.BookId, book.BookId)
-	if err != nil {
-		fmt.Printf("hset redis  failed, err:%v\n", err)
-		return
-	}
-	// 把相同名字的书籍存储到redis 中的哈希表中
-	_, err = conn.Do("HSET", book.Name, book.BookId, book.BookId)
-	if err != nil {
-		fmt.Printf("hset redis  failed, err:%v\n", err)
-		return
-	}
-	return
-}
 
 func (b *BookMgr) AddBook(book *Book) (err error) {
-	b.lock.Lock()
-	defer b.lock.Unlock()
+	var bookTmp Book
+	err = Db.Get(&bookTmp, "select book_id, name, num, author, publish_time from book where name=? and author=?",
+		book.Name, book.Author,
+	)
 
-	//1. 添加到book列表中
-	b.BookList = append(b.BookList, book)
+	if err != sql.ErrNoRows && err != nil {
+		return
+	}
 
-	//2. 更新书籍名字到同一个书籍名字对应的book列表
-	bookList, ok := b.BookNameMap[book.Name]
-	if !ok {
-		var tmp []*Book
-		tmp = append(tmp, book)
-		b.BookNameMap[book.Name] = tmp
+	if err == sql.ErrNoRows {
+		_, err = Db.Exec("insert into book(name, num, author, publish_time)values(?,?,?,?)",
+		book.Name,book.Num, book.Author, book.PublishDate)
 	} else {
-		bookList = append(bookList, book)
-		b.BookNameMap[book.Name] = bookList
+		_, err = Db.Exec("update book set num = num + ? where name=? and author=?", 
+		book.Num, book.Name, book.Author)
 	}
-	
-	//3. 更新书籍作者到同一个作者对应的book列表
-	bookList, ok = b.BookAuthorMap[book.Author]
-	if !ok {
-		var tmp []*Book
-		tmp = append(tmp, book)
-		b.BookAuthorMap[book.Author] = tmp
-	} else {
-		bookList = append(bookList, book)
-		b.BookAuthorMap[book.Author] = bookList
-	}
-	b.save()
 	return
 }
 
 
 func (b *BookMgr) SearchByBookName(bookName string) (bookList []*Book) {
-	b.lock.Lock()
-	defer b.lock.Unlock()
-	bookList = b.BookNameMap[bookName]
+	
+	sql := fmt.Sprintf("select book_id, name, author, num, publish_time from book where name like '%%%s%%'", bookName)
+	Db.Select(&bookList, sql)
 	return
 }
 
 func (b *BookMgr) SearchByAuthor(Author string) (bookList []*Book) {
-	b.lock.Lock()
-	defer b.lock.Unlock()
-	bookList = b.BookAuthorMap[Author]
+	sql := fmt.Sprintf("select book_id, name, author, num, publish_time from book where author like '%%%s%%'", Author)
+	fmt.Println(sql)
+	
+	Db.Select(&bookList, sql)
 	return
 }
 
-func (b *BookMgr) SearchByPushlish(min int64, max int64) (bookList []*Book) {
-	b.lock.Lock()
-	defer b.lock.Unlock()
-	for _, v := range b.BookList {
-		if v.PublishDate >= min && v.PublishDate <= max {
-			bookList = append(bookList, v)
-		}
-	}
+func (b *BookMgr) SearchByPushlish(min time.Time, max time.Time) (bookList []*Book) {
+	sql := fmt.Sprintf("select book_id, name, author, num, publish_time from book where publish_time > ? and publish_time < ?", 
+		min, max)
+	Db.Select(&bookList, sql)
 	return
 }
 
@@ -225,13 +118,7 @@ func (b *BookMgr) Borrow(student *Student, bookId string) (err error) {
 }
 
 func (b *BookMgr)GetTop10() (bookList []*Book) {
-	sort.Sort(b)
-	for i := 0; i < 10; i++ {
-		if i >= len(b.BookList) {
-			break
-		}
-
-		bookList = append(bookList, b.BookList[i])
-	}
+	sql := fmt.Sprintf("select book_id, name, author, num, publish_time, borrow_count from book order by borrow_count desc limit 10")
+	Db.Select(&bookList, sql)
 	return
 }

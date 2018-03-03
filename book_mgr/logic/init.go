@@ -3,11 +3,15 @@ package logic
 
 import (
 	"github.com/garyburd/redigo/redis"
-	"time"
+    "time"
+    "fmt"
+    "github.com/jmoiron/sqlx"
+	_"github.com/go-sql-driver/mysql"
 )
 
 var (
-	pool *redis.Pool
+    pool *redis.Pool
+    Db *sqlx.DB
 )
 
 //初始化一个pool
@@ -41,4 +45,13 @@ func newPool(addr, password string) *redis.Pool {
 func InitRedis(addr string, pass string) (err error) {
 	pool = newPool(addr, pass)
 	return
+}
+
+func InitDb(dns string) (err error) {
+    Db, err = sqlx.Open("mysql", dns)
+	if err != nil {
+		fmt.Println("connect to msyql failed, ", err)
+		return
+    }
+    return
 }

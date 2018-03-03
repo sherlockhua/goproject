@@ -25,6 +25,11 @@ func init() {
 		return
 	}
 
+	err = logic.InitDb("root:@tcp(10.0.0.200:3306)/book_mgr?parseTime=true")
+	if err != nil {
+		fmt.Printf("init Db failed, err:%v\n", err)
+		return
+	}
 	fmt.Printf("init redis succ\n")
 }
 
@@ -73,7 +78,7 @@ func  addBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	publishDate, err := strconv.Atoi(publishDateStr)
+	publishDate, err := time.Parse("2006-01-02", publishDateStr)
 	if err != nil {
 		responseError(w, ErrInvalidParameter)
 		return
@@ -84,10 +89,10 @@ func  addBook(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	book := logic.NewBook(bookId, name, num, author, int64(publishDate))
+	book := logic.NewBook(bookId, name, num, author, publishDate)
 
-	//err = bookMgr.AddBook(book)
-	err = bookMgr.AddBookV2(book)
+	err = bookMgr.AddBook(book)
+	//err = bookMgr.AddBookV2(book)
 	if err != nil {
 		responseError(w, ErrServerBusy)
 		return
@@ -106,7 +111,7 @@ func  searchBookName(w http.ResponseWriter, r *http.Request) {
 		responseError(w, ErrInvalidParameter)
 		return
 	}
-	bookList := bookMgr.SearchByBookNameV2(name)
+	bookList := bookMgr.SearchByBookName(name)
 	responseSuccess(w, ErrSuccess, bookList)
 }
 
