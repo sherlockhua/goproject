@@ -1,7 +1,7 @@
 package routers
 
 import (
-	"beego_short_url/controllers"
+	"github.com/sherlockhua/goproject/beego_short_url/controllers"
 	"github.com/astaxie/beego"
 )
 

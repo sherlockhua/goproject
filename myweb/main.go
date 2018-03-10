@@ -2,7 +2,7 @@ package main
 
 import (
 	"encoding/json"
-	_ "myweb/routers"
+	_ "github.com/sherlockhua/goproject/myweb/routers"
 	"github.com/astaxie/beego"
 	"fmt"
 )

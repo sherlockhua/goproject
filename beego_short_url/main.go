@@ -1,7 +1,7 @@
 package main
 
 import (
-	_ "beego_short_url/routers"
+	_ "github.com/sherlockhua/goproject/beego_short_url/routers"
 	"github.com/astaxie/beego"
 	"github.com/sherlockhua/goproject/short_url/logic"
 )
