@@ -1,0 +1,21 @@
+<html>
+    <head>
+    </head>
+    <body>
+    <table border="1px">
+    {{range .}}
+        <tr>
+        {{if gt .Age 18}}
+        <td> {{.Name}}</td>
+        <td> {{.Age}}</td>
+        <td><input type="submit" value="修改"/></td></td>
+        {{else}}
+        <td> {{.Name}}</td>
+        <td> {{.Age}}</td>
+        <td><input type="submit" value="修改"/></td></td>
+        {{end}}
+    </tr>
+    {{end}}
+    </table>
+    </body>
+    </html>
