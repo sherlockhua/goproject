@@ -49,5 +49,10 @@ func main() {
 	
 	logs.Debug("init log succ")
 
+	err = initKafka()
+	if err != nil {
+		logs.Error("init kafka faild, err:%v", err)
+		return
+	}
 	RunServer()
 }

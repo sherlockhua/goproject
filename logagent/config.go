@@ -10,6 +10,7 @@ type AppConfig struct {
 	LogPath string
 	LogLevel string
 	kafkaAddr string
+	KafkaThreadNum int
 	LogFiles []string
 }
 
@@ -40,6 +41,8 @@ func initConfig(filename string) (err error) {
 	if err != nil || len(logPath) == 0{
 		return
 	}
+
+	appConfig.KafkaThreadNum = conf.GetIntDefault("kafka_thread_num", 8) 
 
 	arr := strings.Split(logFiles, ",")
 	for _, v := range arr {
