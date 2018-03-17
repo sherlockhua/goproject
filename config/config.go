@@ -70,6 +70,8 @@ func (c *Config) reload() {
 				c.rwLock.Lock()
 				c.data = m
 				c.rwLock.Unlock()
+				
+				c.lastModifyTime = curModifyTime
 				for _, n := range c.notifyList {
 					n.Callback(c)
 				}

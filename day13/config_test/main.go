@@ -4,6 +4,7 @@ import (
 	"time"
 	
 	"fmt"
+	"sync/atomic"
 	"github.com/sherlockhua/goproject/config"
 )
 
@@ -12,15 +13,23 @@ type AppConfig struct {
 	kafkaAddr string
 }
 
-func (a *AppConfig) Callback(conf *config.Config) {
+type AppConfigMgr struct {
+	config atomic.Value
+}
+
+var appConfigMgr = &AppConfigMgr{}
+
+func (a *AppConfigMgr) Callback(conf *config.Config) {
+	var appConfig = &AppConfig {}
+
 	port, err := conf.GetInt("server_port")
 	if err != nil {
 		fmt.Println("get port failed, err:", err)
 		return
 	}
 
-	a.port = port
-	fmt.Println("port:", a.port)
+	appConfig.port = port
+	fmt.Println("port:", appConfig.port)
 
 	kafkaAddr, err  := conf.GetString("kafka_addr")
 	if err != nil {
@@ -28,11 +37,22 @@ func (a *AppConfig) Callback(conf *config.Config) {
 		return
 	}
 
-	a.kafkaAddr = kafkaAddr
-	fmt.Println("kafkaAddr:", a.kafkaAddr)
+	appConfig.kafkaAddr = kafkaAddr
+	fmt.Println("kafkaAddr:", appConfig.kafkaAddr)
+
+	appConfigMgr.config.Store(appConfig)
 }
 
-var appConfig = &AppConfig {}
+func run() {
+	for {
+		appConfig := appConfigMgr.config.Load().(*AppConfig)
+		fmt.Println("port:", appConfig.port)
+		fmt.Println("kafkaAddr:", appConfig.kafkaAddr)
+		fmt.Println()
+		fmt.Println()
+		time.Sleep(5 * time.Second)
+	}
+}
 
 func main() {
 	conf, err := config.NewConfig("./config.conf")
@@ -41,7 +61,9 @@ func main() {
 		return
 	}
 
-	conf.AddNotifyer(appConfig)
+	conf.AddNotifyer(appConfigMgr)
+
+	var appConfig = &AppConfig {}
 	appConfig.port , err = conf.GetInt("server_port")
 	if err != nil {
 		fmt.Println("get port failed, err:", err)
@@ -57,10 +79,7 @@ func main() {
 	}
 
 	fmt.Println("kafkaAddr:", appConfig.kafkaAddr)
+	appConfigMgr.config.Store(appConfig)
 
-	for {
-		fmt.Println("port:", appConfig.port)
-		fmt.Println("kafkaAddr:", appConfig.kafkaAddr)
-		time.Sleep(5 * time.Second)
-	}
+	run()
 }
