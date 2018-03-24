@@ -9,7 +9,7 @@ import (
 
 func main() {
 	cli, err := clientv3.New(clientv3.Config{
-		Endpoints:   []string{"localhost:2379", "localhost:22379", "localhost:32379"},
+		Endpoints:   []string{"192.168.14.201:2379"},
 		DialTimeout: 5 * time.Second,
 	})
 	if err != nil {
@@ -19,14 +19,16 @@ func main() {
 	fmt.Println("connect succ")
 	defer cli.Close()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
-	_, err = cli.Put(ctx, "/logagent/conf/", "sample_value")
+	_, err = cli.Put(ctx, "/logagent/conf/a", "sample_value")
+	_, err = cli.Put(ctx, "/logagent/conf/b", "sample_value1")
+	_, err = cli.Put(ctx, "/logagent/conf/c", "sample_value2")
 	cancel()
 	if err != nil {
 		fmt.Println("put failed, err:", err)
 		return
 	}
 	ctx, cancel = context.WithTimeout(context.Background(), time.Second)
-	resp, err := cli.Get(ctx, "/logagent/conf/")
+	resp, err := cli.Get(ctx, "/logagent/conf/", clientv3.WithPrefix())
 	cancel()
 	if err != nil {
 		fmt.Println("get failed, err:", err)
