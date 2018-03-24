@@ -87,6 +87,7 @@ func (t *TailMgr) reloadConfig(logConfArr []LogConfig) (err error) {
 		t.tailObjMap[conf.LogPath] = tailObj
 	}
 
+	//处理删除的日记收集配置
 	for key, tailObj := range t.tailObjMap {
 		var found = false
 		for _, newValue := range logConfArr {
