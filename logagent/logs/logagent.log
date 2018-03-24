@@ -14,3 +14,99 @@
 2018/03/17 17:54:24.059 [D] init log succ
 2018/03/17 17:54:24.069 [D] add log file c:/a.log succ
 2018/03/17 17:54:24.069 [D] add log file d:/b.log succ
+2018/03/24 14:53:25.469 [D] init log succ
+2018/03/24 14:53:25.498 [D] get local ip succ, ips:[192.168.14.201 192.168.253.1 10.0.0.1]
+2018/03/24 15:03:14.212 [D] init log succ
+2018/03/24 15:03:14.238 [D] get local ip succ, ips:[192.168.14.201 192.168.253.1 10.0.0.1]
+2018/03/24 15:03:23.000 [E] init kafka client failed, err:kafka: client has run out of available brokers to talk to (Is your cluster reachable?)
+2018/03/24 15:03:23.000 [E] init kafka faild, err:kafka: client has run out of available brokers to talk to (Is your cluster reachable?)
+2018/03/24 15:03:49.884 [D] init log succ
+2018/03/24 15:03:49.907 [D] get local ip succ, ips:[192.168.14.201 192.168.253.1 10.0.0.1]
+2018/03/24 15:03:49.911 [D] init etcd succ
+2018/03/24 15:04:52.556 [D] init log succ
+2018/03/24 15:04:52.580 [D] get local ip succ, ips:[192.168.14.201 192.168.253.1 10.0.0.1]
+2018/03/24 15:04:52.589 [D] init etcd succ
+2018/03/24 15:05:28.593 [D] PUT "/logagent/192.168.14.201/log_config" : "sample_value"
+
+2018/03/24 15:20:25.215 [D] init log succ
+2018/03/24 15:20:25.245 [D] get local ip succ, ips:[192.168.14.201 192.168.253.1 10.0.0.1]
+2018/03/24 15:20:25.253 [D] init etcd succ
+2018/03/24 15:20:35.254 [D] PUT "/logagent/192.168.14.201/log_config" : "sample_value"
+
+2018/03/24 15:20:35.254 [D] log conf:sample_value
+2018/03/24 15:25:35.645 [D] init log succ
+2018/03/24 15:25:35.676 [D] get local ip succ, ips:[192.168.14.201 192.168.253.1 10.0.0.1]
+2018/03/24 15:25:35.685 [D] init etcd succ
+2018/03/24 15:25:39.693 [D] PUT "/logagent/192.168.14.201/log_config" : "sample_value"
+
+2018/03/24 15:25:39.693 [D] log conf:sample_value
+2018/03/24 15:25:39.693 [E] unmarshal failed, err:invalid character 's' looking for beginning of value conf:sample_value
+2018/03/24 15:27:33.710 [D] PUT "/logagent/192.168.14.201/log_config" : "\n[\n    {\n        \"topic\":\"nginx_log\",\n        \"log_path\":\"c:/a.log\",\n        \"service\":\"account\",\n        \"send_rate\":5000\n    }\n]\n"
+
+2018/03/24 15:27:33.710 [D] log conf:
+[
+    {
+        "topic":"nginx_log",
+        "log_path":"c:/a.log",
+        "service":"account",
+        "send_rate":5000
+    }
+]
+
+2018/03/24 15:27:33.710 [E] unmarshal failed, err:json: cannot unmarshal number into Go struct field LogConfig.send_rate of type string conf:
+[
+    {
+        "topic":"nginx_log",
+        "log_path":"c:/a.log",
+        "service":"account",
+        "send_rate":5000
+    }
+]
+
+2018/03/24 15:28:14.381 [D] init log succ
+2018/03/24 15:28:14.407 [D] get local ip succ, ips:[192.168.14.201 192.168.253.1 10.0.0.1]
+2018/03/24 15:28:14.416 [D] init etcd succ
+2018/03/24 15:28:19.418 [D] PUT "/logagent/192.168.14.201/log_config" : "\n[\n    {\n        \"topic\":\"nginx_log\",\n        \"log_path\":\"c:/a.log\",\n        \"service\":\"account\",\n        \"send_rate\":5000\n    }\n]\n"
+
+2018/03/24 15:28:19.418 [D] log conf:
+[
+    {
+        "topic":"nginx_log",
+        "log_path":"c:/a.log",
+        "service":"account",
+        "send_rate":5000
+    }
+]
+
+2018/03/24 15:28:19.418 [D] unmarshal succ, conf:[{nginx_log c:/a.log account 5000}]
+2018/03/24 15:38:58.085 [D] init log succ
+2018/03/24 15:38:58.113 [D] get local ip succ, ips:[192.168.14.201 192.168.253.1 10.0.0.1]
+2018/03/24 15:38:58.117 [D] init etcd succ
+2018/03/24 15:39:12.120 [D] PUT "/logagent/192.168.14.201/log_config" : "\n[\n    {\n        \"topic\":\"nginx_log\",\n        \"log_path\":\"c:/a.log\",\n        \"service\":\"account\",\n        \"send_rate\":5000\n    }\n]\n"
+
+2018/03/24 15:39:12.120 [D] log conf:
+[
+    {
+        "topic":"nginx_log",
+        "log_path":"c:/a.log",
+        "service":"account",
+        "send_rate":5000
+    }
+]
+
+2018/03/24 15:40:24.606 [D] init log succ
+2018/03/24 15:40:24.631 [D] get local ip succ, ips:[192.168.14.201 192.168.253.1 10.0.0.1]
+2018/03/24 15:40:24.644 [D] init etcd succ
+2018/03/24 15:40:29.645 [D] PUT "/logagent/192.168.14.201/log_config" : "\n[\n    {\n        \"topic\":\"nginx_log\",\n        \"log_path\":\"c:/a.log\",\n        \"service\":\"account\",\n        \"send_rate\":5000\n    }\n]\n"
+
+2018/03/24 15:40:29.645 [D] log conf:
+[
+    {
+        "topic":"nginx_log",
+        "log_path":"c:/a.log",
+        "service":"account",
+        "send_rate":5000
+    }
+]
+
+2018/03/24 15:40:29.645 [D] reload from etcd succ, config:[{nginx_log c:/a.log account 5000}]
