@@ -14,7 +14,7 @@ var logconf = `
         "log_path":"c:/a.log",
         "service":"account",
         "send_rate":5000
-    }
+	}
 ]
 `
 
@@ -39,7 +39,7 @@ func main() {
 		return
 	}
 	ctx, cancel = context.WithTimeout(context.Background(), time.Second)
-	resp, err := cli.Get(ctx, "/logagent/conf/", clientv3.WithPrefix())
+	resp, err := cli.Get(ctx, "/logagent/", clientv3.WithPrefix())
 	cancel()
 	if err != nil {
 		fmt.Println("get failed, err:", err)

@@ -5,16 +5,21 @@ import (
 	"github.com/astaxie/beego/logs"
 )
 
+type Message struct {
+	line string
+	topic string
+}
+
 type KafkaSender struct {
 	client sarama.SyncProducer
-	lineChan chan string
+	lineChan chan *Message
 }
 
 var kafkaSender *KafkaSender
 
 func NewKafkaSender (kafkaAddr string) (kafka *KafkaSender, err error) {
 	kafka = &KafkaSender{
-		lineChan: make (chan string, 100000),
+		lineChan: make (chan *Message, 100000),
 	}
 
 	config := sarama.NewConfig()
@@ -48,8 +53,8 @@ func initKafka() (err error) {
 func (k *KafkaSender) sendToKafka() {
 	for v := range k.lineChan {
 		msg := &sarama.ProducerMessage{}
-		msg.Topic = "nginx_log"
-		msg.Value = sarama.StringEncoder(v)
+		msg.Topic = v.topic
+		msg.Value = sarama.StringEncoder(v.line)
 
 		_, _, err := k.client.SendMessage(msg)
 		if err != nil {
@@ -58,7 +63,7 @@ func (k *KafkaSender) sendToKafka() {
 	}
 }
 
-func (k *KafkaSender) addMessage(line string) (err error) {
-	k.lineChan <- line
+func (k *KafkaSender) addMessage(line string, topic string) (err error) {
+	k.lineChan <- &Message{line:line, topic:topic}
 	return
 }

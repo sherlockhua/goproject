@@ -13,13 +13,13 @@ var logConfChan chan string
 
 func initEtcd(addr []string, keyfmt string, timeout time.Duration) (err error) {
 
-	var key []string
+	var keys []string
 	for _, ip := range ipArrays {
-		key = append(key, fmt.Sprintf(keyfmt, ip))
+		keys = append(keys, fmt.Sprintf(keyfmt, ip))
 	}
 
 	logConfChan = make(chan string, 8)
-	fmt.Println("etcd watch key:", key)
+	fmt.Println("etcd watch key:", keys)
 
 	client, err = clientv3.New(clientv3.Config{
 		Endpoints:   addr,
@@ -32,7 +32,22 @@ func initEtcd(addr []string, keyfmt string, timeout time.Duration) (err error) {
 	
 	logs.Debug("init etcd succ")
 	waitGroup.Add(1)
-	go WatchEtcd(key)
+
+	for  _, key := range keys {
+		ctx, cancel := context.WithTimeout(context.Background(), 2 *time.Second)
+		resp, err := client.Get(ctx, key)
+		cancel()
+		if err != nil {
+			logs.Warn("get key %s failed, err:%v", key, err)
+			continue
+		}
+
+		for _, ev := range resp.Kvs {
+			logs.Debug(" %q : %q\n",  ev.Key, ev.Value)
+			logConfChan <- string(ev.Value)
+		}
+	}
+	go WatchEtcd(keys)
 	return
 }
 

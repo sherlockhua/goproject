@@ -1,6 +1,7 @@
 package main
 
 import (
+	
 	"sync"
 	"github.com/hpcloud/tail"
 	"github.com/astaxie/beego/logs"
@@ -13,6 +14,7 @@ var waitGroup sync.WaitGroup
 
 type TailObj struct {
 	tail *tail.Tail
+	secLimit *SecondLimit
 	offset int64
 	/*
 	filename string
@@ -20,6 +22,7 @@ type TailObj struct {
 	sendRate int
 	*/
 	logConf LogConfig
+	exitChan chan bool
 }
 
 type TailMgr struct {
@@ -54,9 +57,11 @@ func (t *TailMgr) AddLogFile(conf LogConfig) (err error) {
 		})
 
 	tailObj := &TailObj{
+		secLimit: NewSecondLimit(int32(conf.SendRate)),
 		logConf: conf,
 		offset:0,
 		tail:tail,
+		exitChan: make(chan bool, 1),
 	}
 
 	t.tailObjMap[conf.LogPath] = tailObj
@@ -78,7 +83,23 @@ func (t *TailMgr) reloadConfig(logConfArr []LogConfig) (err error) {
 		}
 		
 		tailObj.logConf = conf
+		tailObj.secLimit.limit = int32(conf.SendRate)
 		t.tailObjMap[conf.LogPath] = tailObj
+	}
+
+	for key, tailObj := range t.tailObjMap {
+		var found = false
+		for _, newValue := range logConfArr {
+			if key == newValue.LogPath {
+				found = true
+				break
+			}
+		}
+		if found == false {
+			logs.Warn("log path:%s is remove", key)
+			tailObj.exitChan <- true
+			delete(t.tailObjMap, key)
+		}
 	}
 	return
 }
@@ -101,7 +122,10 @@ func (t *TailMgr) Process() {
 		}
 
 		logs.Debug("reload from etcd succ, config:%v", logConfArr)
+
 	}
+
+	
 	/*
 	for _, tailObj := range t.tailObjMap {
 		waitGroup.Add(1)
@@ -121,7 +145,16 @@ func (t *TailObj) readLog() {
 		if (len(str) == 0 || str[0] == '\n') {
 			continue
 		}
-		kafkaSender.addMessage(line.Text)
+		kafkaSender.addMessage(line.Text, t.logConf.Topic)
+		t.secLimit.Add(1)
+		t.secLimit.Wait()
+
+		select {
+		case <-t.exitChan:
+			logs.Warn("tail obj is exited, config:%v", t.logConf)
+			return
+		default:
+		}
 	}
 	waitGroup.Done()
 }
