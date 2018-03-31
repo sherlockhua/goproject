@@ -5,6 +5,7 @@ import (
 	"github.com/astaxie/beego/logs"
 	"github.com/sherlockhua/goproject/config"
 	"encoding/json"
+	"time"
 )
 
 type AppConfig struct {
@@ -13,6 +14,8 @@ type AppConfig struct {
 	kafkaAddr string
 	esAddr string
 	esThreadNum int
+	etcdAddr string
+	etcdKeyFormat string
 }
 
 var appConfig AppConfig
@@ -53,6 +56,20 @@ func initConfig(confPath string) (err error) {
 	esThreadNum := conf.GetIntDefault("es_thread_num", 8)
 	appConfig.esThreadNum = esThreadNum
 
+	
+	etcdAddr, err := conf.GetString("etcd_addr")
+	if len(etcdAddr) == 0 || err != nil {
+		return fmt.Errorf("get etcdAddr failed,invalid etcdAddr, err:%v", err)
+	}
+
+	appConfig.etcdAddr = etcdAddr
+
+	etcdKey, err := conf.GetString("etcd_transfer_key")
+	if len(etcdAddr) == 0 || err != nil {
+		return fmt.Errorf("get etcd_transfer_key failed,invalid etcd_transfer_key, err:%v", err)
+	}
+
+	appConfig.etcdKeyFormat = etcdKey
 	return
 }
 
@@ -99,6 +116,7 @@ func main(){
 	}
 
 	logs.Debug("init log succ, config:%#v", appConfig)
+	
 	err = initKafka(appConfig.kafkaAddr)
 	if err != nil {
 		logs.Error("init kafka failed, err:%v", err)
@@ -108,6 +126,19 @@ func main(){
 	err = initES(appConfig.esAddr)
 	if err!= nil {
 		logs.Error("init es failed, err:%v", err)
+		return
+	}
+
+	ips, err := getLocalIP();
+	if err != nil {
+		logs.Error("get local ip failed, er:%v", err)
+		return
+	}
+
+	logs.Debug("etcd addr:%s", appConfig.etcdAddr)
+	err = initEtcd([]string{appConfig.etcdAddr}, appConfig.etcdKeyFormat, ips, 5*time.Second)
+	if err != nil {
+		logs.Error("initEtcd failed, er:%v", err)
 		return
 	}
 

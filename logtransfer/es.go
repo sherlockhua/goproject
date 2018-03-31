@@ -1,6 +1,7 @@
 package main
 
 import (
+	"encoding/json"
 	"github.com/astaxie/beego/logs"
 	"sync"
 	elastic "gopkg.in/olivere/elastic.v2"
@@ -34,7 +35,29 @@ func initES(addr string) (err error){
 	*/
 }
 
+func reloadKafka(topicArray []string) {
+
+	for _, topic := range topicArray {
+		kafkaMgr.AddTopic(topic)
+	}
+}
+
+func reload() {
+	for conf := range GetLogConf() {
+		var topicArray []string 
+		err := json.Unmarshal([]byte(conf), &topicArray)
+		if err != nil {
+			logs.Error("unmarshal failed, err:%v conf:%s", err, conf)
+			continue
+		}
+
+		reloadKafka(topicArray)
+	}
+}
+
 func Run(threadNum int) (err error){
+
+	go reload()
 
 	for i := 0; i < threadNum; i++{
 		waitGroup.Add(1)

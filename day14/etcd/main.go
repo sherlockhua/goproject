@@ -23,6 +23,11 @@ var logconf = `
 	}
 ]
 `
+var transconf = `
+[
+    "nginx_log"
+]
+`
 
 func main() {
 	cli, err := clientv3.New(clientv3.Config{
@@ -37,6 +42,8 @@ func main() {
 	defer cli.Close()
 	ctx, cancel := context.WithTimeout(context.Background(), time.Second)
 	_, err = cli.Put(ctx, "/logagent/192.168.12.3/log_config", logconf)
+	///logtransfer/192.168.2.101/log_config
+	_, err = cli.Put(ctx, "/logtransfer/192.168.12.3/log_config", transconf)
 	_, err = cli.Put(ctx, "/logagent/conf/b", "sample_value1")
 	_, err = cli.Put(ctx, "/logagent/conf/c", "sample_value2")
 	cancel()

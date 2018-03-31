@@ -1,0 +1,121 @@
+<!-- BEGIN PAGE CONTAINER-->
+
+<div class="container-fluid">
+
+<!-- BEGIN PAGE HEADER-->
+
+<div class="row-fluid">
+
+    <div class="span12">
+
+                <ul class="breadcrumb">
+
+            <li>
+
+                <i class="icon-home"></i>
+
+                <a href="/app/list">首页</a> 
+
+                <i class="icon-angle-right"></i>
+
+            </li>
+
+            <li>
+
+                <a href="#">项目管理</a>
+
+                <i class="icon-angle-right"></i>
+
+            </li>
+
+            <li><a href="#">项目列表</a></li>
+
+        </ul>
+
+        <!-- END PAGE TITLE & BREADCRUMB-->
+
+    </div>
+
+</div>
+
+<!-- END PAGE HEADER-->
+
+<!-- BEGIN PAGE CONTENT-->
+
+<div class="row-fluid">
+
+    <div class="span12">
+
+        <!-- BEGIN SAMPLE TABLE PORTLET-->
+
+        <div class="portlet box red">
+
+            <div class="portlet-title">
+
+                <div class="caption"><i class="icon-cogs"></i>所有项目</div>
+
+            </div>
+
+            <div class="portlet-body">
+                <form action="/etcd/submit" class="form-horizontal">
+                <table class="table table-hover">
+
+                    <thead>
+
+                        <tr>
+
+                            <th>项目id</th>
+
+                            <th>项目名字</th>
+
+                            <th class="hidden-480">项目类型</th>
+                            <th class="hidden-480">日志路径</th>
+                            <th>创建日期</th>
+                            <th>操作</th>
+                            
+                        </tr>
+
+                    </thead>
+
+                    <tbody>
+
+                        {{range .loglist}}
+                        <tr>
+
+                                <td>{{.AppId}}<input type="hidden" name="app_id" class="span6 m-wrap" value={{.AppId}} /></td>
+
+                                <td>{{.AppName}}</td>
+
+                                <td>{{.AppType}}</td>
+                                <td>{{.LogPath}}</td>
+                                <td class="hidden-480">{{.CreateTime}}</td>
+                                <td><button type="submit" class="btn blue">写入etcd</button></td>
+                        </tr>
+
+                        {{end}}
+                    </tbody>
+
+                </table>
+                <div class="form-actions">
+        
+                
+                </form>
+            </div>
+
+        </div>
+
+        <!-- END SAMPLE TABLE PORTLET-->
+
+    </div>
+
+
+    </div>
+
+</div>
+
+<!-- END PAGE CONTENT-->
+
+</div>
+
+<!-- END PAGE CONTAINER--> 
+
