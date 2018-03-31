@@ -13,7 +13,7 @@ var (
 )
 
 func main() {
-	consumer, err := sarama.NewConsumer(strings.Split("192.168.14.201:9092", ","), nil)
+	consumer, err := sarama.NewConsumer(strings.Split("192.168.12.3:9092", ","), nil)
 	if err != nil {
 		fmt.Println("Failed to start consumer: %s", err)
 		return
@@ -31,8 +31,8 @@ func main() {
 			return
 		}
 		defer pc.AsyncClose()
-		go func(sarama.PartitionConsumer) {
-			for msg := range pc.Messages() {
+		go func(p sarama.PartitionConsumer) {
+			for msg := range p.Messages() {
 				fmt.Printf("Partition:%d, Offset:%d, Key:%s, Value:%s", msg.Partition, msg.Offset, string(msg.Key), string(msg.Value))
 				fmt.Println()
 			}

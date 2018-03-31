@@ -19,7 +19,7 @@ func initEtcd(addr []string, keyfmt string, timeout time.Duration) (err error) {
 	}
 
 	logConfChan = make(chan string, 8)
-	fmt.Println("etcd watch key:", keys)
+	logs.Debug("etcd watch key: timeout:%d", keys, timeout)
 
 	client, err = clientv3.New(clientv3.Config{
 		Endpoints:   addr,
@@ -35,6 +35,7 @@ func initEtcd(addr []string, keyfmt string, timeout time.Duration) (err error) {
 
 	for  _, key := range keys {
 		ctx, cancel := context.WithTimeout(context.Background(), 2 *time.Second)
+		///logagent/192.168.2.100/log_config
 		resp, err := client.Get(ctx, key)
 		cancel()
 		if err != nil {
