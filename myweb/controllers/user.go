@@ -3,6 +3,7 @@ package controllers
 import (
 	"encoding/json"
 	"github.com/astaxie/beego"
+	"time"
 )
 
 type UserController struct {
@@ -43,4 +44,38 @@ func (c *UserController) Delete() {
 	c.Data["Website"] = "beego.me"
 	c.Data["Email"] = "astaxie@gmail.com"
 	c.TplName = "index.tpl"
+}
+
+type Request struct {
+	userId int
+	resultChan chan string
+}
+
+
+func (c *UserController) Test () {
+
+	req := &Request{
+		userId:1000,
+		resultChan: make(chan string, 1),
+	}
+
+	go TestProc(req)
+	timer := time.NewTicker(5*time.Second)
+
+	select {
+	case result := <- req.resultChan:
+		c.Data["json"] = result
+	case <- timer.C:
+		c.Data["json"] = "timeout"
+	}
+
+	timer.Stop()
+	c.ServeJSON()
+
+}
+
+func TestProc(req* Request) {
+
+	time.Sleep(6 *time.Second)
+	req.resultChan <- "process succ"
 }

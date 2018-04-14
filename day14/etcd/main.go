@@ -29,6 +29,18 @@ var transconf = `
 ]
 `
 
+var product_conf = `
+
+[
+	{
+		"product_id":1,
+		"start_time":1523698100,
+		"end_time": 1523709100,
+		"status": 3
+	}
+	]
+`
+
 func main() {
 	cli, err := clientv3.New(clientv3.Config{
 		Endpoints:   []string{"localhost:2379"},
@@ -46,13 +58,14 @@ func main() {
 	_, err = cli.Put(ctx, "/logtransfer/192.168.12.3/log_config", transconf)
 	_, err = cli.Put(ctx, "/logagent/conf/b", "sample_value1")
 	_, err = cli.Put(ctx, "/logagent/conf/c", "sample_value2")
+	_, err = cli.Put(ctx, "/seckill/product/conf", product_conf)
 	cancel()
 	if err != nil {
 		fmt.Println("put failed, err:", err)
 		return
 	}
 	ctx, cancel = context.WithTimeout(context.Background(), time.Second)
-	resp, err := cli.Get(ctx, "/logagent/", clientv3.WithPrefix())
+	resp, err := cli.Get(ctx, "/seckill/", clientv3.WithPrefix())
 	cancel()
 	if err != nil {
 		fmt.Println("get failed, err:", err)

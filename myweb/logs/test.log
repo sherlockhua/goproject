@@ -121,3 +121,7 @@
 2018/03/10 15:22:49.995 [I] http server Running on http://:9999
 2018/03/10 15:22:53.007 [E] this is process failed, err:xxxx 
 2018/03/10 15:22:53.231 [E] this is process failed, err:xxxx 
+2018/04/14 18:14:27.899 [D] [main.go:29] service init success, ready to running 
+2018/04/14 18:14:28.000 [I] [asm_amd64.s:2337] http server Running on http://:9999
+2018/04/14 18:15:09.233 [D] [main.go:29] service init success, ready to running 
+2018/04/14 18:15:09.323 [I] [asm_amd64.s:2337] http server Running on http://:9999

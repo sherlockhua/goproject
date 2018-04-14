@@ -2,9 +2,12 @@ package model
 
 
 import (
-	"encoding/json"
+	"fmt"
+	"time"
+	
 	"github.com/garyburd/redigo/redis"
 	"github.com/astaxie/beego/logs"
+	//"time"
 )
 
 
@@ -73,14 +76,45 @@ func Init(conf *ModelConf) (err error) {
 }
 
 func SecInfo(product_id int) (a *Activity, err error) {
+	a, err = secProxyData.GetActivity(product_id)
+	if err != nil {
+		return
+	}
+	return
+}
+
+
+func SecKill(productId, userId int, userIp string) (result *SecKillResult, err error) {
+	
+	req := &SecKillRequest{
+		ProductId: productId,
+		UserId: userId,
+		UserIp: userIp,
+		resultChan: make(chan *SecKillResult, 1),
+	}
+
+	err = secProxyData.AddRequest(req)
+	if err != nil {
+		logs.Error("add request failed, err:%v", err)
+		return
+	}
+
+	timer := time.NewTicker(10 *time.Second)
+	select {
+	case <- timer.C:
+		err = fmt.Errorf("timeout")
+	case result = <- req.resultChan:
+		return
+	}
 	return
 }
 
 func loadProductInfo() (err error) {
 	secProxyData = &SecProxyData {
 		activityMap: make(map[int]*Activity, 128),
+		requestChan: make(chan *SecKillRequest, 10000),
 	}
-
+/*
 	productConf := <- GetProductChan()
 
 	var activityArr []*Activity
@@ -93,7 +127,7 @@ func loadProductInfo() (err error) {
 	if err != nil {
 		return
 	}
-
+*/
 	go secProxyData.Reload()
 	return
 }

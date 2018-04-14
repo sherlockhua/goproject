@@ -17,13 +17,15 @@ func initEtcd(conf *ModelConf) (err error) {
 		Endpoints:   []string{conf.EtcdAddr},
 		DialTimeout: 3 * time.Second,
 	})
+
 	if err != nil {
 		logs.Warn("init etcd client failed, err:%v", err)
 		return
 	}
 
+	productChan = make(chan string, 16)
 	ctx, cancel := context.WithTimeout(context.Background(), 2 *time.Second)
-	//   /seckill/product/conf
+	//   etcd_key /seckill/product/conf
 	resp, err := etcdClient.Get(ctx, conf.EtcdProductKey)
 	cancel()
 	if err != nil {
