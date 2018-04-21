@@ -121,6 +121,7 @@ func (s *SkillLogic) RecvHandle() {
 			continue
 		}
 
+		conn.Close()
 		select {
 		case s.reqChan <- req:
 		default:
@@ -224,6 +225,7 @@ func (s *SkillLogic) isSaleout(productId int) (err error) {
 	
 	key := fmt.Sprintf("pid_%d", productId)
 	conn := pool.Get()
+	defer conn.Close()
 	curVal, err := redis.Int(conn.Do("INCR", key))
 	if err != nil {
 		logs.Error("incr failed, err:%v", err)
@@ -236,5 +238,6 @@ func (s *SkillLogic) isSaleout(productId int) (err error) {
 		err = errors.New("sale out")
 		return
 	}
+	
 	return
 }
