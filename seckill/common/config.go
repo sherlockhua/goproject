@@ -1,16 +1,31 @@
-package main
+package common
 
 import (
-	
-	"github.com/sherlockhua/goproject/seckill/common"
+	"github.com/astaxie/beego"
+	"fmt"
 )
 
-var proxyConf *common.SkillConf
+type SkillConf struct {
+	RedisAddr string
+	RedisPasswd string
+	
+	EtcdAddr string
+	EtcdProductKey string
 
-func initConfig() (err error){
-	proxyConf, err = common.ReadConfig()
-	return
-	/*
+	SendQueueName string
+	RecvQueueName string
+
+	SendQueueThreadNum int
+	RecvQueueThreadNum  int
+
+	LogPath string
+	LogLevel string
+}
+
+
+func ReadConfig() (proxyConf* SkillConf, err error){
+	proxyConf = &SkillConf{}
+
 	redisAddr := beego.AppConfig.String("redis::redis_addr")
 	if (len(redisAddr) == 0) {
 		err = fmt.Errorf("invalid redis addr")
@@ -79,5 +94,4 @@ func initConfig() (err error){
 	proxyConf.EtcdProductKey = etcdProductKey
 	
 	return
-	*/
 }

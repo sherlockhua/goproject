@@ -7,33 +7,18 @@ import (
 	
 	"github.com/garyburd/redigo/redis"
 	"github.com/astaxie/beego/logs"
+	"github.com/sherlockhua/goproject/seckill/common"
 	//"time"
 )
 
 
-type ModelConf struct {
-	RedisAddr string
-	RedisPasswd string
-	
-	EtcdAddr string
-	EtcdProductKey string
-
-	SendQueueName string
-	RecvQueueName string
-
-	SendQueueThreadNum int
-	RecvQueueThreadNum  int
-
-	LogPath string
-	LogLevel string
-}
 
 //声明一些全局变量
 var (
     pool          *redis.Pool
 )
 
-func initRedis(conf *ModelConf) (err error) {
+func initRedis(conf *common.SkillConf) (err error) {
 	pool = newPool(conf.RedisAddr, conf.RedisPasswd)
 	conn := pool.Get()
 	_, err = conn.Do("ping")
@@ -46,7 +31,7 @@ func initRedis(conf *ModelConf) (err error) {
 	return
 }
 
-func Init(conf *ModelConf) (err error) {
+func Init(conf *common.SkillConf) (err error) {
 
 	err = initRedis(conf)
 	if err != nil {
@@ -72,10 +57,12 @@ func Init(conf *ModelConf) (err error) {
 	if err != nil {
 		return
 	}
+
+	secProxyData.conf = conf
 	return
 }
 
-func SecInfo(product_id int) (a *Activity, err error) {
+func SecInfo(product_id int) (a *common.Activity, err error) {
 	a, err = secProxyData.GetActivity(product_id)
 	if err != nil {
 		return
@@ -84,18 +71,26 @@ func SecInfo(product_id int) (a *Activity, err error) {
 }
 
 
-func SecKill(productId, userId int, userIp string) (result *SecKillResult, err error) {
+func SecKill(productId int, userId int64, userIp string) (result *common.SecKillResult, err error) {
 	
-	req := &SecKillRequest{
+	req := &common.SecKillRequest{
 		ProductId: productId,
 		UserId: userId,
 		UserIp: userIp,
-		resultChan: make(chan *SecKillResult, 1),
+		ResultChan: make(chan *common.SecKillResult, 1),
 	}
 
 	err = secProxyData.AddRequest(req)
 	if err != nil {
-		logs.Error("add request failed, err:%v", err)
+		if err == ErrAlreadySaleout {
+			result = &common.SecKillResult{
+				UserId: userId,
+				ProductId:productId,
+				Status: common.ActivitySaleOut,
+			}
+			err = nil
+			return
+		}
 		return
 	}
 
@@ -103,17 +98,14 @@ func SecKill(productId, userId int, userIp string) (result *SecKillResult, err e
 	select {
 	case <- timer.C:
 		err = fmt.Errorf("timeout")
-	case result = <- req.resultChan:
+	case result = <- req.ResultChan:
 		return
 	}
 	return
 }
 
 func loadProductInfo() (err error) {
-	secProxyData = &SecProxyData {
-		activityMap: make(map[int]*Activity, 128),
-		requestChan: make(chan *SecKillRequest, 10000),
-	}
+	
 /*
 	productConf := <- GetProductChan()
 

@@ -15,7 +15,7 @@ func initModel() (err error) {
 	modelConf.SendQueueName = proxyConf.SendQueueName
 	modelConf.RedisAddr = proxyConf.RedisAddr
 	*/
-	err = model.Init(&proxyConf)
+	err = model.Init(proxyConf)
 	return
 }
 

@@ -36,7 +36,8 @@ var product_conf = `
 		"product_id":1,
 		"start_time":1523698100,
 		"end_time": 1523709100,
-		"status": 3
+		"status": 7,
+		"count": 10
 	}
 	]
 `
